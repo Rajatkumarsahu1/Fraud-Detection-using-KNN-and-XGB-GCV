@@ -93,12 +93,18 @@ st.subheader("📁 Sample Data")
 st.dataframe(df.head(10))
 
 # Footer with your portfolio link
-st.markdown("---")
+# Footer with your portfolio, LinkedIn, Medium, and email
+st.markdown("---", unsafe_allow_html=True)
 st.markdown(
     """
     <div style='text-align: center; font-size: 16px;'>
-        Created by <a href='https://www.datascienceportfol.io/rajatks' target='_blank'>Rajat Kumar Sahu</a>
+        <strong>Made by <a href='https://www.linkedin.com/in/rajat-kumar-sahu1/' target='_blank'>Rajat Kumar Sahu</a></strong><br>
+        📧 <a href='mailto:rajatks1997@gmail.com'>rajatks1997@gmail.com</a> &nbsp; | &nbsp;
+        <a href='https://www.datascienceportfol.io/rajatks' target='_blank'>Portfolio</a> &nbsp; | &nbsp;
+        <a href='https://medium.com/@pythonshortcodes' target='_blank'>Medium</a>
     </div>
     """,
     unsafe_allow_html=True
+)
+
 )
