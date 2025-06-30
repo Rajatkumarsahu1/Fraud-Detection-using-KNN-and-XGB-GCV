@@ -9,7 +9,7 @@ import joblib
 import requests
 import tempfile
 
-# Function to download file from URL and load with joblib
+# Function to download a model file from a URL
 def load_model_from_url(url):
     with tempfile.NamedTemporaryFile(delete=True) as tmp_file:
         response = requests.get(url)
@@ -23,7 +23,7 @@ def load_model_from_url(url):
 xgb_model = joblib.load('xgb_grid.pkl')
 scaler = joblib.load('scaler.pkl')
 
-# Load knn model from GitHub releases URL
+# Load KNN model from GitHub releases URL
 knn_url = 'https://github.com/Rajatkumarsahu1/Fraud-Detection-using-KNN-and-XGB-GCV/releases/download/v1.0/knn_grid.pkl'
 knn_model = load_model_from_url(knn_url)
 
@@ -32,21 +32,18 @@ st.markdown("Compare predictions from **XGBoost** and **KNN** on transaction dat
 
 st.sidebar.header("📝 Input Transaction Features")
 
-# Input features from user
+# Input features
 amount = st.sidebar.slider("Amount", 0.0, 5000.0, 100.0)
 time = st.sidebar.slider("Time", 0.0, 200000.0, 100000.0)
 v_inputs = [st.sidebar.slider(f"V{i}", -5.0, 5.0, 0.0) for i in range(1, 29)]
 
-# Prepare input for prediction
+# Prepare input DataFrame
 input_df = pd.DataFrame([v_inputs + [amount, time]], columns=[f"V{i}" for i in range(1, 29)] + ['Amount', 'Time'])
 input_df[['Amount', 'Time']] = scaler.transform(input_df[['Amount', 'Time']])
-
-# Get correct feature order from training
 correct_order = xgb_model.feature_names_in_
-
-# Reorder features to match model training
 input_df = input_df[correct_order]
 
+# Prediction
 if st.button("🔍 Predict Transaction"):
     col1, col2 = st.columns(2)
 
@@ -61,15 +58,16 @@ if st.button("🔍 Predict Transaction"):
             else:
                 st.success(f"✅ Legitimate Transaction\nProbability: {1 - prob:.2f}" if prob else "✅ Legit")
 
-# Load sample data for visualization
+# Load CSV data from GitHub releases
 @st.cache_data
 def load_data():
-    df = pd.read_csv("creditcard.csv")
+    url = "https://github.com/Rajatkumarsahu1/Fraud-Detection-using-KNN-and-XGB-GCV/releases/download/v1.0/creditcard.csv"
+    df = pd.read_csv(url)
     return df.sample(5000, random_state=42)
 
 df = load_data()
 
-# Visualization Section
+# Visualizations
 st.markdown("---")
 st.header("📊 Data Visualizations")
 
@@ -93,3 +91,14 @@ st.pyplot(fig3)
 st.markdown("---")
 st.subheader("📁 Sample Data")
 st.dataframe(df.head(10))
+
+# Footer with your portfolio link
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; font-size: 16px;'>
+        Created by <a href='https://www.datascienceportfol.io/rajatks' target='_blank'>Rajat Kumar Sahu</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
