@@ -6,12 +6,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
+import requests
+import tempfile
 
-xgb_model=joblib.load('xgb_grid.pkl')
-knn_model=joblib.load('knn_grid.pkl')
-scaler=joblib.load('scaler.pkl')
+# Function to download file from URL and load with joblib
+def load_model_from_url(url):
+    with tempfile.NamedTemporaryFile(delete=True) as tmp_file:
+        response = requests.get(url)
+        response.raise_for_status()
+        tmp_file.write(response.content)
+        tmp_file.flush()
+        model = joblib.load(tmp_file.name)
+    return model
 
+# Load models and scaler
+xgb_model = joblib.load('xgb_grid.pkl')
+scaler = joblib.load('scaler.pkl')
 
+# Load knn model from GitHub releases URL
+knn_url = 'https://github.com/Rajatkumarsahu1/Fraud-Detection-using-KNN-and-XGB-GCV/releases/download/v1.0/knn_grid.pkl'
+knn_model = load_model_from_url(knn_url)
 
 st.title("💳 Credit Card Fraud Detection")
 st.markdown("Compare predictions from **XGBoost** and **KNN** on transaction data.")
@@ -26,18 +40,17 @@ v_inputs = [st.sidebar.slider(f"V{i}", -5.0, 5.0, 0.0) for i in range(1, 29)]
 # Prepare input for prediction
 input_df = pd.DataFrame([v_inputs + [amount, time]], columns=[f"V{i}" for i in range(1, 29)] + ['Amount', 'Time'])
 input_df[['Amount', 'Time']] = scaler.transform(input_df[['Amount', 'Time']])
+
 # Get correct feature order from training
 correct_order = xgb_model.feature_names_in_
 
 # Reorder features to match model training
-correct_order = xgb_model.feature_names_in_
 input_df = input_df[correct_order]
 
 if st.button("🔍 Predict Transaction"):
     col1, col2 = st.columns(2)
 
     for model, name, col in zip([xgb_model, knn_model], ["XGBoost", "KNN"], [col1, col2]):
-        # No error: input_df is now in correct order
         pred = model.predict(input_df)[0]
         prob = model.predict_proba(input_df)[0][1] if hasattr(model, "predict_proba") else None
 
@@ -47,7 +60,6 @@ if st.button("🔍 Predict Transaction"):
                 st.error(f"🚨 Fraudulent Transaction\nProbability: {prob:.2f}" if prob else "🚨 Fraud!")
             else:
                 st.success(f"✅ Legitimate Transaction\nProbability: {1 - prob:.2f}" if prob else "✅ Legit")
-
 
 # Load sample data for visualization
 @st.cache_data
